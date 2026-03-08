@@ -17,10 +17,84 @@
 #include "settings.h"
 #include "lvgl_theme.h"
 #include "lvgl_display.h"
+#include "extensions/octoclaw/runtime/agent_lite.h"
+#include "extensions/octoclaw/profile/board_profile.h"
+#include "extensions/octoclaw/policy/capability_manifest.h"
+#include "extensions/octoclaw/policy/policy_guard.h"
+#include "extensions/octoclaw/policy/policy_store.h"
+#include "extensions/octoclaw/transport/receipt_queue.h"
+#include "extensions/channels/openclaw_extension_catalog.h"
 
 #define TAG "MCP"
 
+namespace {
+
+octo::PolicyStore& GetPolicyStore() {
+    static octo::PolicyStore store;
+    return store;
+}
+
+octo::CapabilityManifest& GetCapabilityManifest() {
+    static octo::CapabilityManifest manifest;
+    return manifest;
+}
+
+octo::PolicyGuard& GetPolicyGuard() {
+    static octo::PolicyGuard guard;
+    return guard;
+}
+
+octo::ReceiptQueue& GetReceiptQueue() {
+    static octo::ReceiptQueue queue(8);
+    return queue;
+}
+
+octo::AgentLiteRuntime& GetAgentLite() {
+    static octo::AgentLiteRuntime runtime(static_cast<size_t>(octo::GetTelemetryRingSize()));
+    return runtime;
+}
+
+uint32_t GetFeatureMask() {
+    const auto& snapshot = GetPolicyStore().GetSnapshot();
+    return octo::GetEffectiveFeatureMask(snapshot.feature_mask_override);
+}
+
+bool IsExtMetaEnabled() {
+    return octo::FeatureEnabled(GetFeatureMask(), octo::kFeatureMcpExtFields);
+}
+
+cJSON* BuildMetaJson(const octo::ReplyMeta& meta) {
+    cJSON* json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "decision", meta.decision.c_str());
+    cJSON_AddNumberToObject(json, "risk", meta.risk_level);
+    cJSON_AddNumberToObject(json, "policyVersion", meta.policy_version);
+    cJSON_AddStringToObject(json, "requestId", meta.request_id.c_str());
+    cJSON_AddStringToObject(json, "reasonCode", meta.reason_code.c_str());
+    return json;
+}
+
+std::string InjectMetaIntoResult(const std::string& result, const octo::ReplyMeta& meta) {
+    cJSON* parsed = cJSON_Parse(result.c_str());
+    if (!cJSON_IsObject(parsed)) {
+        if (parsed != nullptr) {
+            cJSON_Delete(parsed);
+        }
+        return result;
+    }
+    cJSON_AddItemToObject(parsed, "meta", BuildMetaJson(meta));
+    char* out = cJSON_PrintUnformatted(parsed);
+    std::string ret = out != nullptr ? out : result;
+    if (out != nullptr) {
+        cJSON_free(out);
+    }
+    cJSON_Delete(parsed);
+    return ret;
+}
+
+}  // namespace
+
 McpServer::McpServer() {
+    GetPolicyStore().Load();
 }
 
 McpServer::~McpServer() {
@@ -298,6 +372,60 @@ void McpServer::AddUserOnlyTools() {
                 return true;
             });
     }
+
+    AddUserOnlyTool("self.system.get_octoclaw_profile",
+        "Get OctoClaw board profile, policy snapshot and runtime diagnostics",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            const auto& snapshot = GetPolicyStore().GetSnapshot();
+            uint32_t feature_mask = GetFeatureMask();
+
+            cJSON* json = octo::BuildBoardProfileJson(feature_mask, snapshot.policy_version);
+            cJSON_AddItemToObject(json, "policy", GetPolicyStore().ExportJson());
+            cJSON_AddItemToObject(json, "capabilityManifest", GetCapabilityManifest().ExportJson());
+            cJSON_AddItemToObject(json, "receiptQueue", GetReceiptQueue().ExportStatsJson());
+            cJSON_AddItemToObject(json, "agentLite", GetAgentLite().ExportJson());
+            return json;
+        });
+
+    AddUserOnlyTool("self.system.update_octoclaw_policy",
+        "Update OctoClaw policy snapshot. "
+        "Args: policy(JSON string), fields: policy_version/risk_threshold/emergency_stop/tool_whitelist/feature_mask",
+        PropertyList({
+            Property("policy", kPropertyTypeString)
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            auto policy_str = properties["policy"].value<std::string>();
+            cJSON* policy_json = cJSON_Parse(policy_str.c_str());
+            if (!cJSON_IsObject(policy_json)) {
+                if (policy_json != nullptr) {
+                    cJSON_Delete(policy_json);
+                }
+                throw std::runtime_error("Invalid policy JSON");
+            }
+
+            std::string error_message;
+            bool ok = GetPolicyStore().UpdateFromJson(policy_json, &error_message);
+            cJSON_Delete(policy_json);
+            if (!ok) {
+                throw std::runtime_error(error_message.empty() ? "Policy update failed" : error_message);
+            }
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "updated", true);
+            cJSON_AddItemToObject(result, "policy", GetPolicyStore().ExportJson());
+            cJSON_AddNumberToObject(result, "featureMask", static_cast<double>(GetFeatureMask()));
+            return result;
+        });
+
+    AddUserOnlyTool("self.system.list_translated_extensions",
+        "List all translated OpenClaw extensions on ESP32 side",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            return octo::channels::BuildOpenClawExtensionCatalogJson();
+        });
 }
 
 void McpServer::AddTool(McpTool* tool) {
@@ -331,6 +459,10 @@ void McpServer::ParseMessage(const std::string& message) {
     cJSON_Delete(json);
 }
 
+void McpServer::OnTransportReady() {
+    FlushPendingReplies();
+}
+
 void McpServer::ParseCapabilities(const cJSON* capabilities) {
     auto vision = cJSON_GetObjectItem(capabilities, "vision");
     if (cJSON_IsObject(vision)) {
@@ -351,6 +483,8 @@ void McpServer::ParseCapabilities(const cJSON* capabilities) {
 }
 
 void McpServer::ParseMessage(const cJSON* json) {
+    FlushPendingReplies();
+
     // Check JSONRPC version
     auto version = cJSON_GetObjectItem(json, "jsonrpc");
     if (version == nullptr || !cJSON_IsString(version) || strcmp(version->valuestring, "2.0") != 0) {
@@ -435,21 +569,92 @@ void McpServer::ParseMessage(const cJSON* json) {
     }
 }
 
-void McpServer::ReplyResult(int id, const std::string& result) {
-    std::string payload = "{\"jsonrpc\":\"2.0\",\"id\":";
-    payload += std::to_string(id) + ",\"result\":";
-    payload += result;
-    payload += "}";
-    Application::GetInstance().SendMcpMessage(payload);
+void McpServer::ReplyResult(int id, const std::string& result, const octo::ReplyMeta* meta) {
+    std::string final_result = result;
+    if (meta != nullptr && IsExtMetaEnabled()) {
+        final_result = InjectMetaIntoResult(result, *meta);
+    }
+
+    cJSON* payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "jsonrpc", "2.0");
+    cJSON_AddNumberToObject(payload, "id", id);
+
+    cJSON* result_json = cJSON_Parse(final_result.c_str());
+    if (result_json == nullptr) {
+        result_json = cJSON_CreateObject();
+        cJSON_AddStringToObject(result_json, "text", final_result.c_str());
+    }
+    cJSON_AddItemToObject(payload, "result", result_json);
+
+    char* payload_str = cJSON_PrintUnformatted(payload);
+    std::string message = payload_str != nullptr ? payload_str : "";
+    if (payload_str != nullptr) {
+        cJSON_free(payload_str);
+    }
+    cJSON_Delete(payload);
+
+    std::string request_id = std::to_string(id);
+    if (meta != nullptr && !meta->request_id.empty()) {
+        request_id = meta->request_id;
+    }
+    SendReplyPayload(message, request_id);
 }
 
-void McpServer::ReplyError(int id, const std::string& message) {
-    std::string payload = "{\"jsonrpc\":\"2.0\",\"id\":";
-    payload += std::to_string(id);
-    payload += ",\"error\":{\"message\":\"";
-    payload += message;
-    payload += "\"}}";
-    Application::GetInstance().SendMcpMessage(payload);
+void McpServer::ReplyError(int id, const std::string& message, const octo::ReplyMeta* meta) {
+    cJSON* payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "jsonrpc", "2.0");
+    cJSON_AddNumberToObject(payload, "id", id);
+
+    cJSON* error = cJSON_CreateObject();
+    cJSON_AddStringToObject(error, "message", message.c_str());
+    if (meta != nullptr && IsExtMetaEnabled()) {
+        cJSON* data = cJSON_CreateObject();
+        cJSON_AddItemToObject(data, "meta", BuildMetaJson(*meta));
+        cJSON_AddItemToObject(error, "data", data);
+    }
+    cJSON_AddItemToObject(payload, "error", error);
+
+    char* payload_str = cJSON_PrintUnformatted(payload);
+    std::string body = payload_str != nullptr ? payload_str : "";
+    if (payload_str != nullptr) {
+        cJSON_free(payload_str);
+    }
+    cJSON_Delete(payload);
+
+    std::string request_id = std::to_string(id);
+    if (meta != nullptr && !meta->request_id.empty()) {
+        request_id = meta->request_id;
+    }
+    SendReplyPayload(body, request_id);
+}
+
+bool McpServer::SendReplyPayload(const std::string& payload, const std::string& request_id) {
+    auto& app = Application::GetInstance();
+    if (app.IsMcpTransportReady()) {
+        app.SendMcpMessage(payload);
+        return true;
+    }
+
+    if (octo::FeatureEnabled(GetFeatureMask(), octo::kFeatureReceiptCompensation)) {
+        GetReceiptQueue().Enqueue(request_id, payload);
+        GetAgentLite().RecordDecision("reply", octo::GuardAction::kHold, 0, "transport_not_ready");
+    }
+    return false;
+}
+
+void McpServer::FlushPendingReplies() {
+    auto& app = Application::GetInstance();
+    if (!app.IsMcpTransportReady()) {
+        return;
+    }
+    if (!octo::FeatureEnabled(GetFeatureMask(), octo::kFeatureReceiptCompensation)) {
+        return;
+    }
+
+    GetReceiptQueue().Flush([&app](const std::string& message) {
+        app.SendMcpMessage(message);
+        return true;
+    });
 }
 
 void McpServer::GetToolsList(int id, const std::string& cursor, bool list_user_only_tools) {
@@ -550,14 +755,41 @@ void McpServer::DoToolCall(int id, const std::string& tool_name, const cJSON* to
         return;
     }
 
+    auto feature_mask = GetFeatureMask();
+    auto guard_decision = GetPolicyGuard().Evaluate(
+        tool_name,
+        Application::GetInstance().IsMcpTransportReady(),
+        feature_mask,
+        GetPolicyStore(),
+        GetCapabilityManifest()
+    );
+
+    const auto& snapshot = GetPolicyStore().GetSnapshot();
+    octo::ReplyMeta meta;
+    meta.decision = octo::GuardActionToString(guard_decision.action);
+    meta.risk_level = guard_decision.risk_level;
+    meta.policy_version = snapshot.policy_version;
+    meta.request_id = std::to_string(id);
+    meta.reason_code = guard_decision.reason_code;
+
+    GetAgentLite().RecordDecision(tool_name, guard_decision.action, guard_decision.risk_level, guard_decision.reason_code);
+
+    if (guard_decision.action != octo::GuardAction::kExecute) {
+        ReplyError(id, guard_decision.message, &meta);
+        return;
+    }
+
     // Use main thread to call the tool
     auto& app = Application::GetInstance();
-    app.Schedule([this, id, tool_iter, arguments = std::move(arguments)]() {
+    app.Schedule([this, id, tool_iter, arguments = std::move(arguments), meta]() {
         try {
-            ReplyResult(id, (*tool_iter)->Call(arguments));
+            ReplyResult(id, (*tool_iter)->Call(arguments), &meta);
         } catch (const std::exception& e) {
             ESP_LOGE(TAG, "tools/call: %s", e.what());
-            ReplyError(id, e.what());
+            auto fault_meta = meta;
+            fault_meta.decision = octo::GuardActionToString(octo::GuardAction::kFault);
+            fault_meta.reason_code = "tool_execution_exception";
+            ReplyError(id, e.what(), &fault_meta);
         }
     });
 }

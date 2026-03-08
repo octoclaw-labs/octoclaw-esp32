@@ -906,4 +906,58 @@ menu "TAIJIPAI_S3_CONFIG"
         启动双声道
 endmenu
 
+menu "OctoClaw Extension"
+
+config OCTO_ENABLE_POLICY_GUARD
+    bool "Enable OctoClaw policy guard"
+    default y
+    help
+        在 tools/call 执行前做本地策略判定（execute/hold/escalate/fault）。
+
+config OCTO_ENABLE_RECEIPT_COMPENSATION
+    bool "Enable reply compensation queue"
+    default y
+    help
+        当传输链路不可用时，将 MCP 回执写入本地补偿队列，待链路恢复后重放。
+
+config OCTO_ENABLE_LOCAL_AGENT
+    bool "Enable local agent-lite runtime"
+    default y if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4
+    default n
+    help
+        仅启用轻量规则与遥测 ring buffer，不包含 L2 深推理。
+
+config OCTO_ENABLE_MCP_EXT_FIELDS
+    bool "Enable MCP optional extension fields"
+    default y
+    help
+        在保持兼容的前提下追加可选 meta 字段（decision/risk/policyVersion/requestId）。
+
+config OCTO_ENABLE_ESP_NOW_AGENT
+    bool "Enable ESP-NOW local agent collaboration"
+    default y if IDF_TARGET_ESP32P4
+    default n
+    help
+        预留给高配板型的设备协作能力开关。
+
+config OCTO_RULE_MAX
+    int "Max local rules in agent-lite"
+    range 1 64
+    default 24 if IDF_TARGET_ESP32P4
+    default 16 if IDF_TARGET_ESP32S3
+    default 8
+    help
+        本地规则上限，值越大占用内存越多。
+
+config OCTO_TELEMETRY_RING_SIZE
+    int "Telemetry ring size for agent-lite"
+    range 4 256
+    default 64 if IDF_TARGET_ESP32P4
+    default 32 if IDF_TARGET_ESP32S3
+    default 16
+    help
+        本地决策事件 ring buffer 大小，用于断网期间最小观测能力。
+
+endmenu
+
 endmenu

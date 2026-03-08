@@ -4,6 +4,7 @@
 #include "system_info.h"
 #include "audio_codec.h"
 #include "mqtt_protocol.h"
+#include "nats_protocol.h"
 #include "websocket_protocol.h"
 #include "assets/lang_config.h"
 #include "mcp_server.h"
@@ -477,7 +478,9 @@ void Application::InitializeProtocol() {
 
     display->SetStatus(Lang::Strings::LOADING_PROTOCOL);
 
-    if (ota_->HasMqttConfig()) {
+    if (ota_->HasNatsConfig()) {
+        protocol_ = std::make_unique<NatsProtocol>();
+    } else if (ota_->HasMqttConfig()) {
         protocol_ = std::make_unique<MqttProtocol>();
     } else if (ota_->HasWebsocketConfig()) {
         protocol_ = std::make_unique<WebsocketProtocol>();
@@ -507,6 +510,7 @@ void Application::InitializeProtocol() {
             ESP_LOGW(TAG, "Server sample rate %d does not match device output sample rate %d, resampling may cause distortion",
                 protocol_->server_sample_rate(), codec->output_sample_rate());
         }
+        McpServer::GetInstance().OnTransportReady();
     });
     
     protocol_->OnAudioChannelClosed([this, &board]() {
@@ -1075,6 +1079,10 @@ void Application::SendMcpMessage(const std::string& payload) {
     });
 }
 
+bool Application::IsMcpTransportReady() const {
+    return protocol_ != nullptr && protocol_->IsAudioChannelOpened();
+}
+
 void Application::SetAecMode(AecMode mode) {
     aec_mode_ = mode;
     Schedule([this]() {
@@ -1116,4 +1124,3 @@ void Application::ResetProtocol() {
         protocol_.reset();
     });
 }
-

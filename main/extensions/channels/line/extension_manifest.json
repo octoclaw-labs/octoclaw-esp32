@@ -1,0 +1,36 @@
+{
+  "id": "line",
+  "source": {
+    "path": "research/openclaw/extensions/line",
+    "pluginFile": "research/openclaw/extensions/line/openclaw.plugin.json"
+  },
+  "adapterType": "channel",
+  "status": "translated-skeleton",
+  "translationVersion": 1,
+  "capabilities": {
+    "channels": [
+      "line"
+    ],
+    "providers": [],
+    "commands": [],
+    "skills": [],
+    "kind": "",
+    "hasConfigSchema": true,
+    "configKeyCount": 0,
+    "hasUiHints": false
+  },
+  "esp32": {
+    "transportHints": [
+      "websocket",
+      "mqtt",
+      "nats"
+    ],
+    "defaultEnabled": false,
+    "todos": [
+      "补齐设备侧配置映射（NVS/menuconfig）",
+      "补齐 MCP 工具与渠道事件的转换层",
+      "补齐故障回执与遥测字段映射",
+      "补齐上行/下行消息路由与会话绑定"
+    ]
+  }
+}

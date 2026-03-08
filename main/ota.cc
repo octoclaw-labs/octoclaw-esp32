@@ -143,6 +143,27 @@ esp_err_t Ota::CheckVersion() {
         }
     }
 
+    has_nats_config_ = false;
+    cJSON *nats = cJSON_GetObjectItem(root, "nats");
+    if (cJSON_IsObject(nats)) {
+        Settings settings("nats", true);
+        cJSON *item = NULL;
+        cJSON_ArrayForEach(item, nats) {
+            if (cJSON_IsString(item)) {
+                if (settings.GetString(item->string) != item->valuestring) {
+                    settings.SetString(item->string, item->valuestring);
+                }
+            } else if (cJSON_IsNumber(item)) {
+                if (settings.GetInt(item->string) != item->valueint) {
+                    settings.SetInt(item->string, item->valueint);
+                }
+            }
+        }
+        has_nats_config_ = true;
+    } else {
+        ESP_LOGI(TAG, "No nats section found!");
+    }
+
     has_mqtt_config_ = false;
     cJSON *mqtt = cJSON_GetObjectItem(root, "mqtt");
     if (cJSON_IsObject(mqtt)) {

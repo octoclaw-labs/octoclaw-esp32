@@ -1,0 +1,36 @@
+{
+  "id": "copilot-proxy",
+  "source": {
+    "path": "research/openclaw/extensions/copilot-proxy",
+    "pluginFile": "research/openclaw/extensions/copilot-proxy/openclaw.plugin.json"
+  },
+  "adapterType": "provider",
+  "status": "translated-skeleton",
+  "translationVersion": 1,
+  "capabilities": {
+    "channels": [],
+    "providers": [
+      "copilot-proxy"
+    ],
+    "commands": [],
+    "skills": [],
+    "kind": "",
+    "hasConfigSchema": true,
+    "configKeyCount": 0,
+    "hasUiHints": false
+  },
+  "esp32": {
+    "transportHints": [
+      "websocket",
+      "mqtt",
+      "nats"
+    ],
+    "defaultEnabled": false,
+    "todos": [
+      "补齐设备侧配置映射（NVS/menuconfig）",
+      "补齐 MCP 工具与渠道事件的转换层",
+      "补齐故障回执与遥测字段映射",
+      "补齐 provider 鉴权与配额保护"
+    ]
+  }
+}

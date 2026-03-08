@@ -29,8 +29,17 @@ set(SOURCES "audio/audio_codec.cc"
             "protocols/protocol.cc"
             "protocols/mqtt_protocol.cc"
             "protocols/websocket_protocol.cc"
+            "protocols/nats_protocol.cc"
             "mcp_server.cc"
             "system_info.cc"
+            "extensions/octoclaw/profile/board_profile.cc"
+            "extensions/octoclaw/policy/capability_manifest.cc"
+            "extensions/octoclaw/policy/policy_store.cc"
+            "extensions/octoclaw/policy/policy_guard.cc"
+            "extensions/octoclaw/transport/receipt_queue.cc"
+            "extensions/octoclaw/runtime/agent_lite.cc"
+            "extensions/channels/channel_registry.cc"
+            "extensions/channels/openclaw_extension_catalog.cc"
             "application.cc"
             "ota.cc"
             "settings.cc"
@@ -39,7 +48,13 @@ set(SOURCES "audio/audio_codec.cc"
             "main.cc"
             )
 
-set(INCLUDE_DIRS "." "display" "display/lvgl_display" "display/lvgl_display/jpg" "audio" "audio/demuxer" "protocols")
+set(INCLUDE_DIRS "." "display" "display/lvgl_display" "display/lvgl_display/jpg" "audio" "audio/demuxer" "protocols"
+                 "extensions/octoclaw/core"
+                 "extensions/channels"
+                 "extensions/octoclaw/policy"
+                 "extensions/octoclaw/profile"
+                 "extensions/octoclaw/runtime"
+                 "extensions/octoclaw/transport")
 
 # Add board common files
 list(APPEND SOURCES

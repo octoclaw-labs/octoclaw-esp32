@@ -1,0 +1,33 @@
+{
+  "id": "voice-call",
+  "source": {
+    "path": "research/openclaw/extensions/voice-call",
+    "pluginFile": "research/openclaw/extensions/voice-call/openclaw.plugin.json"
+  },
+  "adapterType": "service",
+  "status": "translated-skeleton",
+  "translationVersion": 1,
+  "capabilities": {
+    "channels": [],
+    "providers": [],
+    "commands": [],
+    "skills": [],
+    "kind": "",
+    "hasConfigSchema": true,
+    "configKeyCount": 28,
+    "hasUiHints": true
+  },
+  "esp32": {
+    "transportHints": [
+      "websocket",
+      "mqtt",
+      "nats"
+    ],
+    "defaultEnabled": false,
+    "todos": [
+      "补齐设备侧配置映射（NVS/menuconfig）",
+      "补齐 MCP 工具与渠道事件的转换层",
+      "补齐故障回执与遥测字段映射"
+    ]
+  }
+}

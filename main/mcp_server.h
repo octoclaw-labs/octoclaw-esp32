@@ -13,6 +13,10 @@
 
 #include <cJSON.h>
 
+namespace octo {
+struct ReplyMeta;
+}
+
 class ImageContent {
 private:
     std::string encoded_data_;
@@ -325,6 +329,7 @@ public:
     void AddUserOnlyTool(const std::string& name, const std::string& description, const PropertyList& properties, std::function<ReturnValue(const PropertyList&)> callback);
     void ParseMessage(const cJSON* json);
     void ParseMessage(const std::string& message);
+    void OnTransportReady();
 
 private:
     McpServer();
@@ -332,8 +337,10 @@ private:
 
     void ParseCapabilities(const cJSON* capabilities);
 
-    void ReplyResult(int id, const std::string& result);
-    void ReplyError(int id, const std::string& message);
+    void ReplyResult(int id, const std::string& result, const octo::ReplyMeta* meta = nullptr);
+    void ReplyError(int id, const std::string& message, const octo::ReplyMeta* meta = nullptr);
+    bool SendReplyPayload(const std::string& payload, const std::string& request_id);
+    void FlushPendingReplies();
 
     void GetToolsList(int id, const std::string& cursor, bool list_user_only_tools);
     void DoToolCall(int id, const std::string& tool_name, const cJSON* tool_arguments);

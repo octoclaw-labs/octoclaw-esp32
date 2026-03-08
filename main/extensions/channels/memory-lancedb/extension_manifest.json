@@ -1,0 +1,34 @@
+{
+  "id": "memory-lancedb",
+  "source": {
+    "path": "research/openclaw/extensions/memory-lancedb",
+    "pluginFile": "research/openclaw/extensions/memory-lancedb/openclaw.plugin.json"
+  },
+  "adapterType": "memory",
+  "status": "translated-skeleton",
+  "translationVersion": 1,
+  "capabilities": {
+    "channels": [],
+    "providers": [],
+    "commands": [],
+    "skills": [],
+    "kind": "memory",
+    "hasConfigSchema": true,
+    "configKeyCount": 5,
+    "hasUiHints": true
+  },
+  "esp32": {
+    "transportHints": [
+      "websocket",
+      "mqtt",
+      "nats"
+    ],
+    "defaultEnabled": false,
+    "todos": [
+      "补齐设备侧配置映射（NVS/menuconfig）",
+      "补齐 MCP 工具与渠道事件的转换层",
+      "补齐故障回执与遥测字段映射",
+      "评估是否上移，设备侧仅保留轻量索引"
+    ]
+  }
+}

@@ -1,0 +1,514 @@
+{
+  "sourceRoot": "research/openclaw/extensions",
+  "targetRoot": "main/extensions/channels",
+  "total": 37,
+  "typeCount": {
+    "skill": 2,
+    "channel": 21,
+    "provider": 4,
+    "service": 8,
+    "memory": 2
+  },
+  "extensions": [
+    {
+      "id": "acpx",
+      "adapterType": "skill",
+      "sourceDir": "research/openclaw/extensions/acpx",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [
+        "./skills"
+      ],
+      "kind": "",
+      "configKeyCount": 5,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "bluebubbles",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/bluebubbles",
+      "channels": [
+        "bluebubbles"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "copilot-proxy",
+      "adapterType": "provider",
+      "sourceDir": "research/openclaw/extensions/copilot-proxy",
+      "channels": [],
+      "providers": [
+        "copilot-proxy"
+      ],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "device-pair",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/device-pair",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 1,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "diagnostics-otel",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/diagnostics-otel",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "discord",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/discord",
+      "channels": [
+        "discord"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "feishu",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/feishu",
+      "channels": [
+        "feishu"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [
+        "./skills"
+      ],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "google-gemini-cli-auth",
+      "adapterType": "provider",
+      "sourceDir": "research/openclaw/extensions/google-gemini-cli-auth",
+      "channels": [],
+      "providers": [
+        "google-gemini-cli"
+      ],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "googlechat",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/googlechat",
+      "channels": [
+        "googlechat"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "imessage",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/imessage",
+      "channels": [
+        "imessage"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "irc",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/irc",
+      "channels": [
+        "irc"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "line",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/line",
+      "channels": [
+        "line"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "llm-task",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/llm-task",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 6,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "lobster",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/lobster",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "matrix",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/matrix",
+      "channels": [
+        "matrix"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "mattermost",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/mattermost",
+      "channels": [
+        "mattermost"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "memory-core",
+      "adapterType": "memory",
+      "sourceDir": "research/openclaw/extensions/memory-core",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "memory",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "memory-lancedb",
+      "adapterType": "memory",
+      "sourceDir": "research/openclaw/extensions/memory-lancedb",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "memory",
+      "configKeyCount": 5,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "minimax-portal-auth",
+      "adapterType": "provider",
+      "sourceDir": "research/openclaw/extensions/minimax-portal-auth",
+      "channels": [],
+      "providers": [
+        "minimax-portal"
+      ],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "msteams",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/msteams",
+      "channels": [
+        "msteams"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "nextcloud-talk",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/nextcloud-talk",
+      "channels": [
+        "nextcloud-talk"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "nostr",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/nostr",
+      "channels": [
+        "nostr"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "open-prose",
+      "adapterType": "skill",
+      "sourceDir": "research/openclaw/extensions/open-prose",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [
+        "./skills"
+      ],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "phone-control",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/phone-control",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "qwen-portal-auth",
+      "adapterType": "provider",
+      "sourceDir": "research/openclaw/extensions/qwen-portal-auth",
+      "channels": [],
+      "providers": [
+        "qwen-portal"
+      ],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "signal",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/signal",
+      "channels": [
+        "signal"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "slack",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/slack",
+      "channels": [
+        "slack"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "synology-chat",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/synology-chat",
+      "channels": [
+        "synology-chat"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "talk-voice",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/talk-voice",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "telegram",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/telegram",
+      "channels": [
+        "telegram"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "thread-ownership",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/thread-ownership",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 2,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "tlon",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/tlon",
+      "channels": [
+        "tlon"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "twitch",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/twitch",
+      "channels": [
+        "twitch"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "voice-call",
+      "adapterType": "service",
+      "sourceDir": "research/openclaw/extensions/voice-call",
+      "channels": [],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 28,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "whatsapp",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/whatsapp",
+      "channels": [
+        "whatsapp"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "zalo",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/zalo",
+      "channels": [
+        "zalo"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    },
+    {
+      "id": "zalouser",
+      "adapterType": "channel",
+      "sourceDir": "research/openclaw/extensions/zalouser",
+      "channels": [
+        "zalouser"
+      ],
+      "providers": [],
+      "commands": [],
+      "skills": [],
+      "kind": "",
+      "configKeyCount": 0,
+      "status": "translated-skeleton"
+    }
+  ]
+}
