@@ -11,10 +11,12 @@ struct ExtensionCatalogEntry {
     const char* id;
     const char* adapter_type;
     const char* source_dir;
+    const char* status;
     bool has_channels;
     bool has_providers;
     bool has_skills;
     bool has_config_schema;
+    bool websocket_capable;
     int config_key_count;
 };
 

@@ -13,7 +13,21 @@
 - `main/extensions/octoclaw/runtime`：本地 agent-lite 运行时
 - `main/extensions/octoclaw/transport`：回执补偿队列与传输态适配
 
-OpenClaw 扩展翻译矩阵见：`docs/openclaw-extension-translation-matrix.md`（自动生成，当前 37 个扩展骨架）。
+OpenClaw 扩展翻译矩阵见：`docs/openclaw-extension-translation-matrix.md`（自动生成，当前 37 个扩展，含 5 个已实现）。
+
+当前已落地可运行扩展：
+
+- `device-pair`：配对码生成、待审批缓存、审批回传。
+- `thread-ownership`：Slack 线程归属校验、@提及旁路、forwarder claim、NVS 配置持久化。
+- `nostr`：channel_event 收件缓存、allowlist 过滤、send_dm 上行桥接、NVS 配置持久化。
+- `mattermost`：channel_event 收件缓存、allowlist 过滤、send_message 上行桥接、NVS 配置持久化。
+- `feishu`：channel_event 收件缓存、allowlist 过滤、send_message 上行桥接、NVS 配置持久化。
+
+Channel 实施边界（ESP32）：
+
+- 仅实现可通过 WebSocket 对接上游服务的 channel。
+- 当前纳入范围：`feishu`、`mattermost`、`nostr`（以翻译矩阵和 manifest 为准）。
+  - 当前已实现：`nostr`、`mattermost`、`feishu`（三通道独立插件，见 `main/extensions/channels/<channel>/`）。
 
 ## 1. 板型档位与默认能力
 
@@ -71,6 +85,32 @@ OpenClaw 扩展翻译矩阵见：`docs/openclaw-extension-translation-matrix.md`
   - 返回：板型档位、feature mask、policy、capability manifest、回执队列统计、agent-lite 遥测。
 - `self.system.list_translated_extensions`
   - 返回：已翻译的 OpenClaw 扩展目录清单（id、类型、来源、配置键统计）。
+- `self.pair.generate_setup_code`
+  - 根据 `nats.url` / `websocket.url` 生成移动端可用 setup code（支持传入 `public_url` 覆盖）。
+- `self.pair.list_pending_requests`
+  - 返回当前缓存的待审批配对请求。
+- `self.pair.approve_request`
+  - 按 `request_id`（默认 `latest`）审批配对，并回传上游 `pairing approve` 事件。
+- `self.thread_ownership.get_state`
+  - 查看线程归属配置（forwarder、A/B channels、agent identity）和运行态统计。
+- `self.thread_ownership.set_config`
+  - 更新线程归属配置并持久化到 NVS（命名空间 `octo_thread`）。
+- `self.thread_ownership.record_message_received`
+  - 记录 `message_received` 事件用于 @ 提及短期旁路（默认 5 分钟）。
+- `self.thread_ownership.check_before_send`
+  - 发送前执行 ownership claim；若返回 `cancel=true` 则表示线程已被其他 agent 占有。
+- `self.nostr.get_state`
+  - 返回 nostr 配置、运行统计和设备侧缓存 inbox。
+- `self.nostr.set_config`
+  - 设置并持久化 nostr 配置（`enabled/account_id/allow_pubkeys`）。
+- `self.nostr.clear_inbox`
+  - 清空设备侧 nostr inbox 缓存。
+- `self.nostr.send_dm`
+  - 发送 `channel_command` 到上游 bridge，请求发送 nostr DM。
+- `self.mattermost.get_state` / `self.mattermost.set_config` / `self.mattermost.clear_inbox` / `self.mattermost.send_message`
+  - Mattermost 通道：配置与 inbox 持久化在 NVS `octo_mattermost`，上行命令 `channel_command(channel=mattermost, command=send_message)`。
+- `self.feishu.get_state` / `self.feishu.set_config` / `self.feishu.clear_inbox` / `self.feishu.send_message`
+  - 飞书通道：配置与 inbox 持久化在 NVS `octo_feishu`，上行命令 `channel_command(channel=feishu, command=send_message)`。
 
 ## 5. 回执错误与决策码
 

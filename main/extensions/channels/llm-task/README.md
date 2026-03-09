@@ -1,4 +1,4 @@
-# llm-task（ESP32 翻译骨架）
+# llm-task（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/llm-task`
 - 适配类型：`service`

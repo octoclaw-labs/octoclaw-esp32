@@ -927,6 +927,31 @@ config OCTO_ENABLE_LOCAL_AGENT
     help
         仅启用轻量规则与遥测 ring buffer，不包含 L2 深推理。
 
+config OCTO_ENABLE_CHANNEL_NOSTR
+    bool "Enable Nostr WebSocket channel plugin"
+    default y
+    help
+        启用 Nostr 独立插件（main/extensions/channels/nostr）。
+        Lite 板型默认仅保留 Nostr 文本闭环。
+
+config OCTO_ENABLE_CHANNEL_MATTERMOST
+    bool "Enable Mattermost WebSocket channel plugin"
+    default y if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4
+    default n if IDF_TARGET_ESP32C3
+    default n
+    help
+        启用 Mattermost 独立插件（main/extensions/channels/mattermost）。
+        C3（Lite）默认关闭，S3/P4（Standard/Pro）默认开启，可手动覆写。
+
+config OCTO_ENABLE_CHANNEL_FEISHU
+    bool "Enable Feishu WebSocket channel plugin"
+    default y if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4
+    default n if IDF_TARGET_ESP32C3
+    default n
+    help
+        启用 Feishu 独立插件（main/extensions/channels/feishu）。
+        C3（Lite）默认关闭，S3/P4（Standard/Pro）默认开启，可手动覆写。
+
 config OCTO_ENABLE_MCP_EXT_FIELDS
     bool "Enable MCP optional extension fields"
     default y

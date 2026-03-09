@@ -1,8 +1,9 @@
-# device-pair（ESP32 翻译骨架）
+# device-pair（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/device-pair`
 - 适配类型：`service`
-- 当前状态：`translated-skeleton`
+- 当前状态：`implemented`
+- 说明：已落地设备侧配对码生成、待审批缓存、审批回传上游链路。
 
 ## 能力摘要
 
@@ -15,6 +16,4 @@
 
 ## 设备侧待实现
 
-- [ ] 补齐设备侧配置映射（NVS/menuconfig）
-- [ ] 补齐 MCP 工具与渠道事件的转换层
-- [ ] 补齐故障回执与遥测字段映射
+- [x] 已接入设备侧可运行实现并通过基础链路验证

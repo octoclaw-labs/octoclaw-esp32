@@ -1,4 +1,4 @@
-# memory-lancedb（ESP32 翻译骨架）
+# memory-lancedb（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/memory-lancedb`
 - 适配类型：`memory`

@@ -26,6 +26,9 @@
       "nats"
     ],
     "defaultEnabled": false,
+    "websocketCapable": false,
+    "websocketEvidence": [],
+    "implementationScope": "in-scope",
     "todos": [
       "补齐设备侧配置映射（NVS/menuconfig）",
       "补齐 MCP 工具与渠道事件的转换层",

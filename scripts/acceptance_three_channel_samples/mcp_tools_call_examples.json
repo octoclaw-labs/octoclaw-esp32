@@ -1,0 +1,44 @@
+[
+  {
+    "description": "MCP tools/call 样例：self.nostr.send_dm（设备 -> 上游 channel_command）",
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "self.nostr.send_dm",
+      "arguments": {
+        "to": "npub1recipient",
+        "text": "Reply from device",
+        "request_id": "req-nostr-001"
+      }
+    },
+    "id": 1
+  },
+  {
+    "description": "MCP tools/call 样例：self.mattermost.send_message",
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "self.mattermost.send_message",
+      "arguments": {
+        "to": "channel_id_or_user_id",
+        "text": "Reply from device",
+        "request_id": "req-mm-001"
+      }
+    },
+    "id": 2
+  },
+  {
+    "description": "MCP tools/call 样例：self.feishu.send_message",
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "self.feishu.send_message",
+      "arguments": {
+        "to": "oc_chat_id_or_open_id",
+        "text": "设备回复消息",
+        "request_id": "req-feishu-001"
+      }
+    },
+    "id": 3
+  }
+]

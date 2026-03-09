@@ -51,3 +51,30 @@
 ## 4. 与 MCP 的关系
 
 MCP 仍通过 `type: "mcp"` JSON 透传，`payload` 内保持 JSON-RPC 2.0，不改变现有 `initialize / tools/list / tools/call` 语义。
+
+## 5. 配对事件（device-pair）
+
+- 下行待配对请求（示例）：
+  - `type: "pairing_request"`，或 `type: "pairing" + state: "request"`
+  - 关键字段：`request_id` / `device_id` / `display_name` / `platform` / `remote_ip` / `ts`
+- 上行审批回执（设备发出）：
+  - `{"type":"pairing","state":"approve","request_id":"...","session_id":"..."}`
+
+## 6. 线程归属事件（thread-ownership）
+
+- 下行可选事件（用于记录 @ 提及，5 分钟内可旁路 ownership claim）：
+  - `type: "channel_event"` + `event: "message_received"`
+  - payload 关键字段：`channel=slack`、`channel_id`、`thread_ts`、`text`
+- 设备可通过 MCP 用户工具执行发送前检查：
+  - `self.thread_ownership.check_before_send`
+  - 返回 `cancel=true` 表示该线程已被其他 agent 占有（对应 forwarder `409`）。
+
+## 7. Nostr 渠道桥接（nostr）
+
+- 下行事件（上游 -> 设备）：
+  - `type: "channel_event"`，`channel: "nostr"`，`event: "message_received"`
+  - payload 关键字段：`sender_id`、`text`、`event_id`、`chat_id`、`relay`、`ts`
+  - 设备会按 `allow_pubkeys`（可选）过滤并缓存到 NVS `octo_nostr`。
+- 上行命令（设备 -> 上游）：
+  - `{"type":"channel_command","channel":"nostr","command":"send_dm","payload":{...}}`
+  - 建议由工具 `self.nostr.send_dm` 触发，payload 包含 `to/text/accountId/requestId`。

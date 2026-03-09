@@ -73,9 +73,46 @@ void Protocol::SendStopListening() {
     SendText(message);
 }
 
+void Protocol::SendPairingApprove(const std::string& request_id) {
+    std::string message = "{\"session_id\":\"" + session_id_ + "\",\"type\":\"pairing\",\"state\":\"approve\",\"request_id\":\"";
+    message += request_id;
+    message += "\"}";
+    SendText(message);
+}
+
 void Protocol::SendMcpMessage(const std::string& payload) {
     std::string message = "{\"session_id\":\"" + session_id_ + "\",\"type\":\"mcp\",\"payload\":" + payload + "}";
     SendText(message);
+}
+
+void Protocol::SendChannelCommand(const std::string& channel,
+                                  const std::string& command,
+                                  const std::string& payload) {
+    if (channel.empty() || command.empty()) {
+        return;
+    }
+
+    cJSON* root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "session_id", session_id_.c_str());
+    cJSON_AddStringToObject(root, "type", "channel_command");
+    cJSON_AddStringToObject(root, "channel", channel.c_str());
+    cJSON_AddStringToObject(root, "command", command.c_str());
+
+    if (!payload.empty()) {
+        cJSON* parsed = cJSON_Parse(payload.c_str());
+        if (parsed != nullptr) {
+            cJSON_AddItemToObject(root, "payload", parsed);
+        } else {
+            cJSON_AddStringToObject(root, "payloadText", payload.c_str());
+        }
+    }
+
+    char* raw = cJSON_PrintUnformatted(root);
+    if (raw != nullptr) {
+        SendText(raw);
+        cJSON_free(raw);
+    }
+    cJSON_Delete(root);
 }
 
 bool Protocol::IsTimeout() const {

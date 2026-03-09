@@ -5,7 +5,7 @@
     "pluginFile": "research/openclaw/extensions/device-pair/openclaw.plugin.json"
   },
   "adapterType": "service",
-  "status": "translated-skeleton",
+  "status": "implemented",
   "translationVersion": 1,
   "capabilities": {
     "channels": [],
@@ -23,11 +23,13 @@
       "mqtt",
       "nats"
     ],
-    "defaultEnabled": false,
+    "defaultEnabled": true,
+    "websocketCapable": false,
+    "websocketEvidence": [],
+    "implementationScope": "in-scope",
     "todos": [
-      "补齐设备侧配置映射（NVS/menuconfig）",
-      "补齐 MCP 工具与渠道事件的转换层",
-      "补齐故障回执与遥测字段映射"
+      "已接入设备侧可运行实现并通过基础链路验证"
     ]
-  }
+  },
+  "notes": "已落地设备侧配对码生成、待审批缓存、审批回传上游链路。"
 }

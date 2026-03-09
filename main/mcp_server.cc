@@ -23,7 +23,13 @@
 #include "extensions/octoclaw/policy/policy_guard.h"
 #include "extensions/octoclaw/policy/policy_store.h"
 #include "extensions/octoclaw/transport/receipt_queue.h"
+#include "extensions/octoclaw/audit/audit_log.h"
 #include "extensions/channels/openclaw_extension_catalog.h"
+#include "extensions/channels/device_pair_service.h"
+#include "extensions/channels/thread_ownership_service.h"
+#include "extensions/channels/nostr/nostr_channel_service.h"
+#include "extensions/channels/mattermost/mattermost_channel_service.h"
+#include "extensions/channels/feishu/feishu_channel_service.h"
 
 #define TAG "MCP"
 
@@ -52,6 +58,11 @@ octo::ReceiptQueue& GetReceiptQueue() {
 octo::AgentLiteRuntime& GetAgentLite() {
     static octo::AgentLiteRuntime runtime(static_cast<size_t>(octo::GetTelemetryRingSize()));
     return runtime;
+}
+
+octo::AuditLog& GetAuditLog() {
+    static octo::AuditLog log(64);
+    return log;
 }
 
 uint32_t GetFeatureMask() {
@@ -419,6 +430,430 @@ void McpServer::AddUserOnlyTools() {
             return result;
         });
 
+    AddUserOnlyTool("self.pair.generate_setup_code",
+        "Generate OpenClaw mobile pairing setup code from current device gateway settings",
+        PropertyList({
+            Property("public_url", kPropertyTypeString, std::string("")),
+            Property("auth_token", kPropertyTypeString, std::string("")),
+            Property("auth_password", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            std::string error_message;
+            cJSON* result = octo::channels::DevicePairService::GetInstance().GenerateSetupCodeJson(
+                properties["public_url"].value<std::string>(),
+                properties["auth_token"].value<std::string>(),
+                properties["auth_password"].value<std::string>(),
+                &error_message
+            );
+            if (result == nullptr) {
+                throw std::runtime_error(error_message.empty() ? "Failed to generate setup code" : error_message);
+            }
+            return result;
+        });
+
+    AddUserOnlyTool("self.pair.list_pending_requests",
+        "List pending device pairing requests cached on device",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            return octo::channels::DevicePairService::GetInstance().ExportPendingJson();
+        });
+
+    AddUserOnlyTool("self.pair.approve_request",
+        "Approve a pending pairing request and notify upstream channel",
+        PropertyList({
+            Property("request_id", kPropertyTypeString, std::string("latest"))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            octo::channels::PairingRequest approved;
+            std::string request_id = properties["request_id"].value<std::string>();
+            if (!octo::channels::DevicePairService::GetInstance().ApproveRequest(request_id, &approved)) {
+                throw std::runtime_error("Pairing request not found");
+            }
+
+            Application::GetInstance().SendPairingApprove(approved.request_id);
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "approved", true);
+            cJSON_AddStringToObject(result, "requestId", approved.request_id.c_str());
+            cJSON_AddStringToObject(result, "deviceId", approved.device_id.c_str());
+            cJSON_AddStringToObject(result, "displayName", approved.display_name.c_str());
+            cJSON_AddStringToObject(result, "platform", approved.platform.c_str());
+            cJSON_AddStringToObject(result, "remoteIp", approved.remote_ip.c_str());
+            cJSON_AddNumberToObject(result, "ts", static_cast<double>(approved.ts_ms));
+            return result;
+        });
+
+    AddUserOnlyTool("self.thread_ownership.get_state",
+        "Get thread ownership config/runtime snapshot for slack forwarder coordination",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::ThreadOwnershipService::GetInstance().ExportConfigJson());
+            cJSON_AddItemToObject(result, "runtime",
+                                  octo::channels::ThreadOwnershipService::GetInstance().ExportRuntimeJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.thread_ownership.set_config",
+        "Set thread ownership config. ab_test_channels uses comma-separated Slack channel IDs.",
+        PropertyList({
+            Property("forwarder_url", kPropertyTypeString, std::string("")),
+            Property("ab_test_channels", kPropertyTypeString, std::string("")),
+            Property("bot_user_id", kPropertyTypeString, std::string("")),
+            Property("agent_id", kPropertyTypeString, std::string("")),
+            Property("agent_name", kPropertyTypeString, std::string("")),
+            Property("enabled", kPropertyTypeBoolean, true)
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            std::string error_message;
+            bool ok = octo::channels::ThreadOwnershipService::GetInstance().UpdateConfig(
+                properties["forwarder_url"].value<std::string>(),
+                properties["ab_test_channels"].value<std::string>(),
+                properties["bot_user_id"].value<std::string>(),
+                properties["agent_id"].value<std::string>(),
+                properties["agent_name"].value<std::string>(),
+                properties["enabled"].value<bool>(),
+                &error_message);
+            if (!ok) {
+                throw std::runtime_error(error_message.empty() ? "thread ownership config update failed" : error_message);
+            }
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "updated", true);
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::ThreadOwnershipService::GetInstance().ExportConfigJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.thread_ownership.record_message_received",
+        "Record a received channel message so @mention can bypass ownership check in recent Slack thread.",
+        PropertyList({
+            Property("channel", kPropertyTypeString, std::string("slack")),
+            Property("channel_id", kPropertyTypeString),
+            Property("thread_ts", kPropertyTypeString),
+            Property("text", kPropertyTypeString)
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            bool tracked = octo::channels::ThreadOwnershipService::GetInstance().TrackMention(
+                properties["channel"].value<std::string>(),
+                properties["channel_id"].value<std::string>(),
+                properties["thread_ts"].value<std::string>(),
+                properties["text"].value<std::string>());
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "tracked", tracked);
+            return result;
+        });
+
+    AddUserOnlyTool("self.thread_ownership.check_before_send",
+        "Check Slack thread ownership before sending. Returns cancel=true when thread is owned by another agent.",
+        PropertyList({
+            Property("channel", kPropertyTypeString, std::string("slack")),
+            Property("channel_id", kPropertyTypeString),
+            Property("thread_ts", kPropertyTypeString, std::string("")),
+            Property("text", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            auto decision = octo::channels::ThreadOwnershipService::GetInstance().CheckBeforeSend(
+                properties["channel"].value<std::string>(),
+                properties["channel_id"].value<std::string>(),
+                properties["thread_ts"].value<std::string>(),
+                properties["text"].value<std::string>());
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "allow", decision.allow);
+            cJSON_AddBoolToObject(result, "cancel", decision.cancelled);
+            cJSON_AddBoolToObject(result, "checked", decision.checked);
+            cJSON_AddBoolToObject(result, "failOpen", decision.fail_open);
+            cJSON_AddNumberToObject(result, "statusCode", decision.status_code);
+            cJSON_AddStringToObject(result, "reason", decision.reason.c_str());
+            cJSON_AddStringToObject(result, "owner", decision.owner.c_str());
+            return result;
+        });
+
+#if CONFIG_OCTO_ENABLE_CHANNEL_NOSTR
+    AddUserOnlyTool("self.nostr.get_state",
+        "Get nostr channel config, runtime stats and cached inbox",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::NostrChannelService::GetInstance().ExportConfigJson());
+            cJSON_AddItemToObject(result, "stats",
+                                  octo::channels::NostrChannelService::GetInstance().ExportStatsJson());
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::NostrChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.nostr.set_config",
+        "Set nostr channel config and persist into NVS namespace octo_nostr",
+        PropertyList({
+            Property("enabled", kPropertyTypeBoolean, true),
+            Property("account_id", kPropertyTypeString, std::string("default")),
+            Property("allow_pubkeys", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            std::string error_message;
+            bool ok = octo::channels::NostrChannelService::GetInstance().UpdateConfig(
+                properties["enabled"].value<bool>(),
+                properties["account_id"].value<std::string>(),
+                properties["allow_pubkeys"].value<std::string>(),
+                &error_message);
+            if (!ok) {
+                throw std::runtime_error(error_message.empty() ? "nostr config update failed" : error_message);
+            }
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "updated", true);
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::NostrChannelService::GetInstance().ExportConfigJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.nostr.clear_inbox",
+        "Clear cached nostr inbox messages from device",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            bool ok = octo::channels::NostrChannelService::GetInstance().ClearInbox();
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "cleared", ok);
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::NostrChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.nostr.send_dm",
+        "Send a nostr DM request to upstream channel bridge",
+        PropertyList({
+            Property("to", kPropertyTypeString),
+            Property("text", kPropertyTypeString),
+            Property("request_id", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            auto& app = Application::GetInstance();
+            if (!app.IsMcpTransportReady()) {
+                throw std::runtime_error("Transport not ready");
+            }
+
+            std::string error_message;
+            cJSON* payload = octo::channels::NostrChannelService::GetInstance().BuildSendDmPayloadJson(
+                properties["to"].value<std::string>(),
+                properties["text"].value<std::string>(),
+                properties["request_id"].value<std::string>(),
+                &error_message);
+            if (payload == nullptr) {
+                throw std::runtime_error(error_message.empty() ? "Failed to build nostr payload" : error_message);
+            }
+
+            char* payload_raw = cJSON_PrintUnformatted(payload);
+            std::string payload_json = payload_raw != nullptr ? payload_raw : "{}";
+            if (payload_raw != nullptr) {
+                cJSON_free(payload_raw);
+            }
+            cJSON_Delete(payload);
+
+            app.SendChannelCommand("nostr", "send_dm", payload_json);
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "queued", true);
+            cJSON_AddStringToObject(result, "channel", "nostr");
+            cJSON_AddStringToObject(result, "command", "send_dm");
+            cJSON_AddStringToObject(result, "payload", payload_json.c_str());
+            return result;
+        });
+#endif
+
+#if CONFIG_OCTO_ENABLE_CHANNEL_MATTERMOST
+    AddUserOnlyTool("self.mattermost.get_state",
+        "Get mattermost channel config, runtime stats and cached inbox",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::MattermostChannelService::GetInstance().ExportConfigJson());
+            cJSON_AddItemToObject(result, "stats",
+                                  octo::channels::MattermostChannelService::GetInstance().ExportStatsJson());
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::MattermostChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.mattermost.set_config",
+        "Set mattermost channel config and persist into NVS namespace octo_mattermost",
+        PropertyList({
+            Property("enabled", kPropertyTypeBoolean, true),
+            Property("account_id", kPropertyTypeString, std::string("default")),
+            Property("allow_senders", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            std::string error_message;
+            bool ok = octo::channels::MattermostChannelService::GetInstance().UpdateConfig(
+                properties["enabled"].value<bool>(),
+                properties["account_id"].value<std::string>(),
+                properties["allow_senders"].value<std::string>(),
+                &error_message);
+            if (!ok) {
+                throw std::runtime_error(error_message.empty() ? "mattermost config update failed" : error_message);
+            }
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "updated", true);
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::MattermostChannelService::GetInstance().ExportConfigJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.mattermost.clear_inbox",
+        "Clear cached mattermost inbox messages from device",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            bool ok = octo::channels::MattermostChannelService::GetInstance().ClearInbox();
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "cleared", ok);
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::MattermostChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.mattermost.send_message",
+        "Send a mattermost message request to upstream channel bridge",
+        PropertyList({
+            Property("to", kPropertyTypeString),
+            Property("text", kPropertyTypeString),
+            Property("request_id", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            auto& app = Application::GetInstance();
+            if (!app.IsMcpTransportReady()) {
+                throw std::runtime_error("Transport not ready");
+            }
+
+            std::string error_message;
+            cJSON* payload = octo::channels::MattermostChannelService::GetInstance().BuildSendMessagePayloadJson(
+                properties["to"].value<std::string>(),
+                properties["text"].value<std::string>(),
+                properties["request_id"].value<std::string>(),
+                &error_message);
+            if (payload == nullptr) {
+                throw std::runtime_error(error_message.empty() ? "Failed to build mattermost payload" : error_message);
+            }
+
+            char* payload_raw = cJSON_PrintUnformatted(payload);
+            std::string payload_json = payload_raw != nullptr ? payload_raw : "{}";
+            if (payload_raw != nullptr) {
+                cJSON_free(payload_raw);
+            }
+            cJSON_Delete(payload);
+
+            app.SendChannelCommand("mattermost", "send_message", payload_json);
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "queued", true);
+            cJSON_AddStringToObject(result, "channel", "mattermost");
+            cJSON_AddStringToObject(result, "command", "send_message");
+            cJSON_AddStringToObject(result, "payload", payload_json.c_str());
+            return result;
+        });
+#endif
+
+#if CONFIG_OCTO_ENABLE_CHANNEL_FEISHU
+    AddUserOnlyTool("self.feishu.get_state",
+        "Get feishu channel config, runtime stats and cached inbox",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::FeishuChannelService::GetInstance().ExportConfigJson());
+            cJSON_AddItemToObject(result, "stats",
+                                  octo::channels::FeishuChannelService::GetInstance().ExportStatsJson());
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::FeishuChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.feishu.set_config",
+        "Set feishu channel config and persist into NVS namespace octo_feishu",
+        PropertyList({
+            Property("enabled", kPropertyTypeBoolean, true),
+            Property("account_id", kPropertyTypeString, std::string("default")),
+            Property("allow_senders", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            std::string error_message;
+            bool ok = octo::channels::FeishuChannelService::GetInstance().UpdateConfig(
+                properties["enabled"].value<bool>(),
+                properties["account_id"].value<std::string>(),
+                properties["allow_senders"].value<std::string>(),
+                &error_message);
+            if (!ok) {
+                throw std::runtime_error(error_message.empty() ? "feishu config update failed" : error_message);
+            }
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "updated", true);
+            cJSON_AddItemToObject(result, "config",
+                                  octo::channels::FeishuChannelService::GetInstance().ExportConfigJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.feishu.clear_inbox",
+        "Clear cached feishu inbox messages from device",
+        PropertyList(),
+        [](const PropertyList& properties) -> ReturnValue {
+            (void)properties;
+            bool ok = octo::channels::FeishuChannelService::GetInstance().ClearInbox();
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "cleared", ok);
+            cJSON_AddItemToObject(result, "inbox",
+                                  octo::channels::FeishuChannelService::GetInstance().ExportInboxJson());
+            return result;
+        });
+
+    AddUserOnlyTool("self.feishu.send_message",
+        "Send a feishu message request to upstream channel bridge",
+        PropertyList({
+            Property("to", kPropertyTypeString),
+            Property("text", kPropertyTypeString),
+            Property("request_id", kPropertyTypeString, std::string(""))
+        }),
+        [](const PropertyList& properties) -> ReturnValue {
+            auto& app = Application::GetInstance();
+            if (!app.IsMcpTransportReady()) {
+                throw std::runtime_error("Transport not ready");
+            }
+
+            std::string error_message;
+            cJSON* payload = octo::channels::FeishuChannelService::GetInstance().BuildSendMessagePayloadJson(
+                properties["to"].value<std::string>(),
+                properties["text"].value<std::string>(),
+                properties["request_id"].value<std::string>(),
+                &error_message);
+            if (payload == nullptr) {
+                throw std::runtime_error(error_message.empty() ? "Failed to build feishu payload" : error_message);
+            }
+
+            char* payload_raw = cJSON_PrintUnformatted(payload);
+            std::string payload_json = payload_raw != nullptr ? payload_raw : "{}";
+            if (payload_raw != nullptr) {
+                cJSON_free(payload_raw);
+            }
+            cJSON_Delete(payload);
+
+            app.SendChannelCommand("feishu", "send_message", payload_json);
+
+            cJSON* result = cJSON_CreateObject();
+            cJSON_AddBoolToObject(result, "queued", true);
+            cJSON_AddStringToObject(result, "channel", "feishu");
+            cJSON_AddStringToObject(result, "command", "send_message");
+            cJSON_AddStringToObject(result, "payload", payload_json.c_str());
+            return result;
+        });
+#endif
+
     AddUserOnlyTool("self.system.list_translated_extensions",
         "List all translated OpenClaw extensions on ESP32 side",
         PropertyList(),
@@ -562,7 +997,17 @@ void McpServer::ParseMessage(const cJSON* json) {
             ReplyError(id_int, "Invalid arguments");
             return;
         }
-        DoToolCall(id_int, std::string(tool_name->valuestring), tool_arguments);
+        std::string client_request_id;
+        auto rid = cJSON_GetObjectItem(params, "request_id");
+        if (cJSON_IsString(rid)) {
+            client_request_id = rid->valuestring;
+        } else {
+            rid = cJSON_GetObjectItem(params, "requestId");
+            if (cJSON_IsString(rid)) {
+                client_request_id = rid->valuestring;
+            }
+        }
+        DoToolCall(id_int, std::string(tool_name->valuestring), tool_arguments, client_request_id);
     } else {
         ESP_LOGE(TAG, "Method not implemented: %s", method_str.c_str());
         ReplyError(id_int, "Method not implemented: " + method_str);
@@ -713,7 +1158,8 @@ void McpServer::GetToolsList(int id, const std::string& cursor, bool list_user_o
     ReplyResult(id, json);
 }
 
-void McpServer::DoToolCall(int id, const std::string& tool_name, const cJSON* tool_arguments) {
+void McpServer::DoToolCall(int id, const std::string& tool_name, const cJSON* tool_arguments,
+                            const std::string& client_request_id) {
     auto tool_iter = std::find_if(tools_.begin(), tools_.end(), 
                                  [&tool_name](const McpTool* tool) { 
                                      return tool->name() == tool_name; 
@@ -769,26 +1215,29 @@ void McpServer::DoToolCall(int id, const std::string& tool_name, const cJSON* to
     meta.decision = octo::GuardActionToString(guard_decision.action);
     meta.risk_level = guard_decision.risk_level;
     meta.policy_version = snapshot.policy_version;
-    meta.request_id = std::to_string(id);
+    meta.request_id = client_request_id.empty() ? std::to_string(id) : client_request_id;
     meta.reason_code = guard_decision.reason_code;
 
     GetAgentLite().RecordDecision(tool_name, guard_decision.action, guard_decision.risk_level, guard_decision.reason_code);
 
     if (guard_decision.action != octo::GuardAction::kExecute) {
+        GetAuditLog().RecordToolCall(meta.request_id, tool_name, meta.decision, meta.reason_code);
         ReplyError(id, guard_decision.message, &meta);
         return;
     }
 
     // Use main thread to call the tool
     auto& app = Application::GetInstance();
-    app.Schedule([this, id, tool_iter, arguments = std::move(arguments), meta]() {
+    app.Schedule([this, id, tool_iter, tool_name, arguments = std::move(arguments), meta]() {
         try {
             ReplyResult(id, (*tool_iter)->Call(arguments), &meta);
+            GetAuditLog().RecordToolCall(meta.request_id, tool_name, "done", "");
         } catch (const std::exception& e) {
             ESP_LOGE(TAG, "tools/call: %s", e.what());
             auto fault_meta = meta;
             fault_meta.decision = octo::GuardActionToString(octo::GuardAction::kFault);
             fault_meta.reason_code = "tool_execution_exception";
+            GetAuditLog().RecordToolCall(meta.request_id, tool_name, "fault", fault_meta.reason_code);
             ReplyError(id, e.what(), &fault_meta);
         }
     });

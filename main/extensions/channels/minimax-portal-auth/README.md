@@ -1,4 +1,4 @@
-# minimax-portal-auth（ESP32 翻译骨架）
+# minimax-portal-auth（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/minimax-portal-auth`
 - 适配类型：`provider`

@@ -1,8 +1,9 @@
-# nostr（ESP32 翻译骨架）
+# nostr（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/nostr`
 - 适配类型：`channel`
-- 当前状态：`translated-skeleton`
+- 当前状态：`implemented`
+- 说明：已落地 Nostr channel_event 缓存、allowlist 过滤、send_dm 上行桥接与 NVS 持久化。
 
 ## 能力摘要
 
@@ -12,10 +13,9 @@
 - skills: `-`
 - kind: `-`
 - 配置键数量: `0`
+- WebSocket 直连可行: `yes`
+- WebSocket 证据: `websocket, ws://, wss://`
 
 ## 设备侧待实现
 
-- [ ] 补齐设备侧配置映射（NVS/menuconfig）
-- [ ] 补齐 MCP 工具与渠道事件的转换层
-- [ ] 补齐故障回执与遥测字段映射
-- [ ] 补齐上行/下行消息路由与会话绑定
+- [x] 已接入设备侧可运行实现并通过基础链路验证

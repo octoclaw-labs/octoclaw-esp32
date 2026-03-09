@@ -9,6 +9,16 @@
     "service": 8,
     "memory": 2
   },
+  "statusCount": {
+    "translated-skeleton": 32,
+    "implemented": 5
+  },
+  "channelScope": {
+    "websocketOnlyPolicy": true,
+    "channelTotal": 21,
+    "websocketCapable": 3,
+    "outOfScope": 18
+  },
   "extensions": [
     {
       "id": "acpx",
@@ -22,7 +32,10 @@
       ],
       "kind": "",
       "configKeyCount": 5,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "bluebubbles",
@@ -36,7 +49,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "copilot-proxy",
@@ -50,7 +66,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "device-pair",
@@ -62,7 +81,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 1,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "implemented",
+      "notes": "已落地设备侧配对码生成、待审批缓存、审批回传上游链路。"
     },
     {
       "id": "diagnostics-otel",
@@ -74,7 +96,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "discord",
@@ -88,7 +113,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "feishu",
@@ -104,7 +132,12 @@
       ],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": true,
+      "websocketEvidence": [
+        "websocket"
+      ],
+      "status": "implemented",
+      "notes": "已落地 Feishu channel_event 缓存、allowlist 过滤、send_message 上行桥接与 NVS 持久化。"
     },
     {
       "id": "google-gemini-cli-auth",
@@ -118,7 +151,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "googlechat",
@@ -132,7 +168,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "imessage",
@@ -146,7 +185,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "irc",
@@ -160,7 +202,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "line",
@@ -174,7 +219,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "llm-task",
@@ -186,7 +234,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 6,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "lobster",
@@ -198,7 +249,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "matrix",
@@ -212,7 +266,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "mattermost",
@@ -226,7 +283,13 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": true,
+      "websocketEvidence": [
+        "websocket",
+        "wss://"
+      ],
+      "status": "implemented",
+      "notes": "已落地 Mattermost channel_event 缓存、allowlist 过滤、send_message 上行桥接与 NVS 持久化。"
     },
     {
       "id": "memory-core",
@@ -238,7 +301,10 @@
       "skills": [],
       "kind": "memory",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "memory-lancedb",
@@ -250,7 +316,10 @@
       "skills": [],
       "kind": "memory",
       "configKeyCount": 5,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "minimax-portal-auth",
@@ -264,7 +333,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "msteams",
@@ -278,7 +350,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "nextcloud-talk",
@@ -292,7 +367,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "nostr",
@@ -306,7 +384,14 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": true,
+      "websocketEvidence": [
+        "websocket",
+        "ws://",
+        "wss://"
+      ],
+      "status": "implemented",
+      "notes": "已落地 Nostr channel_event 缓存、allowlist 过滤、send_dm 上行桥接与 NVS 持久化。"
     },
     {
       "id": "open-prose",
@@ -320,7 +405,10 @@
       ],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "phone-control",
@@ -332,7 +420,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "qwen-portal-auth",
@@ -346,7 +437,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "signal",
@@ -360,7 +454,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "slack",
@@ -374,7 +471,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "synology-chat",
@@ -388,7 +488,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "talk-voice",
@@ -400,7 +503,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "telegram",
@@ -414,7 +520,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "thread-ownership",
@@ -426,7 +535,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 2,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "implemented",
+      "notes": "已落地 Slack 线程归属校验、@提及旁路、forwarder HTTP claim 与 NVS 配置持久化。"
     },
     {
       "id": "tlon",
@@ -440,7 +552,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "twitch",
@@ -454,7 +569,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "voice-call",
@@ -466,7 +584,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 28,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "whatsapp",
@@ -480,7 +601,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "zalo",
@@ -494,7 +618,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     },
     {
       "id": "zalouser",
@@ -508,7 +635,10 @@
       "skills": [],
       "kind": "",
       "configKeyCount": 0,
-      "status": "translated-skeleton"
+      "websocketCapable": false,
+      "websocketEvidence": [],
+      "status": "translated-skeleton",
+      "notes": ""
     }
   ]
 }

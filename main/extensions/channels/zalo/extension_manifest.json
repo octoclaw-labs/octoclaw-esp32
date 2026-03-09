@@ -26,11 +26,14 @@
       "nats"
     ],
     "defaultEnabled": false,
+    "websocketCapable": false,
+    "websocketEvidence": [],
+    "implementationScope": "out-of-scope-websocket-only",
     "todos": [
       "补齐设备侧配置映射（NVS/menuconfig）",
       "补齐 MCP 工具与渠道事件的转换层",
       "补齐故障回执与遥测字段映射",
-      "补齐上行/下行消息路由与会话绑定"
+      "当前不纳入 ESP32 实现范围（仅实现可 WebSocket 直连的 channel）"
     ]
   }
 }

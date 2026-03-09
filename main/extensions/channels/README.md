@@ -9,16 +9,28 @@
 - `openclaw_extension_catalog.h/.cc`：翻译扩展目录导出（供诊断工具返回）
 - `openclaw_extension_catalog.generated.h`：自动生成的 37 个扩展清单
 - `openclaw_extensions_manifest.json`：翻译清单 JSON
+- `translation_status_overrides.json`：状态覆盖（支持 `status/notes/websocket_capable/websocket_evidence`）
+- 已落地可运行扩展：
+  - `device-pair`（setup code、待审批缓存、审批回传）
+  - `thread-ownership`（Slack ownership claim、@提及旁路、NVS 配置）
+  - `nostr`（channel_event 收件缓存、allowlist 过滤、send_dm 上行桥接）
+
+## Channel 落地范围（ESP32）
+
+- 仅实现 **可通过 WebSocket 连接上游服务** 的 channel。
+- 自动检测结果写入每个扩展的 `README.md` 与 `extension_manifest.json`：
+  - `esp32.websocketCapable=true`：可纳入设备侧实现。
+  - `esp32.websocketCapable=false`：默认不纳入（资源/协议不匹配）。
+- 如需人工纠偏，可在 `translation_status_overrides.json` 为扩展补充：
+  - `websocket_capable: true/false`
+  - `websocket_evidence: ["..."]`
 
 ## 建议迁移清单
 
 可按下列优先级逐步迁移：
 
-1. `douyin`
-2. `meituan`
-3. `rednode`
-4. `kuaishou`
-5. `amap`
+1. `mattermost`（企业 IM，线程/消息模型清晰）
+2. `feishu`（生态复杂度较高，放第二阶段）
 
 每个渠道建议建立独立子目录（例如 `main/extensions/channels/douyin`），并提供以下最小实现：
 

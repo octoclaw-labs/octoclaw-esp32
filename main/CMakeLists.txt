@@ -38,7 +38,12 @@ set(SOURCES "audio/audio_codec.cc"
             "extensions/octoclaw/policy/policy_guard.cc"
             "extensions/octoclaw/transport/receipt_queue.cc"
             "extensions/octoclaw/runtime/agent_lite.cc"
+            "extensions/octoclaw/runtime/task_step.cc"
+            "extensions/octoclaw/espnow/espnow_agent.cc"
+            "extensions/octoclaw/audit/audit_log.cc"
             "extensions/channels/channel_registry.cc"
+            "extensions/channels/device_pair_service.cc"
+            "extensions/channels/thread_ownership_service.cc"
             "extensions/channels/openclaw_extension_catalog.cc"
             "application.cc"
             "ota.cc"
@@ -54,7 +59,21 @@ set(INCLUDE_DIRS "." "display" "display/lvgl_display" "display/lvgl_display/jpg"
                  "extensions/octoclaw/policy"
                  "extensions/octoclaw/profile"
                  "extensions/octoclaw/runtime"
-                 "extensions/octoclaw/transport")
+                 "extensions/octoclaw/transport"
+                 "extensions/octoclaw/espnow"
+                 "extensions/octoclaw/audit")
+
+if(CONFIG_OCTO_ENABLE_CHANNEL_NOSTR)
+    list(APPEND SOURCES "extensions/channels/nostr/nostr_channel_service.cc")
+endif()
+
+if(CONFIG_OCTO_ENABLE_CHANNEL_MATTERMOST)
+    list(APPEND SOURCES "extensions/channels/mattermost/mattermost_channel_service.cc")
+endif()
+
+if(CONFIG_OCTO_ENABLE_CHANNEL_FEISHU)
+    list(APPEND SOURCES "extensions/channels/feishu/feishu_channel_service.cc")
+endif()
 
 # Add board common files
 list(APPEND SOURCES

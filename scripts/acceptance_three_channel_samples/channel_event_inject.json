@@ -1,0 +1,42 @@
+[
+  {
+    "description": "Feishu channel_event 下行注入样例（上游 -> 设备）",
+    "type": "channel_event",
+    "channel": "feishu",
+    "event": "message_received",
+    "payload": {
+      "sender_id": "ou_xxx",
+      "text": "验收测试消息",
+      "chat_id": "oc_xxx",
+      "message_id": "om_xxx",
+      "ts": 1709900000
+    }
+  },
+  {
+    "description": "Mattermost channel_event 下行注入样例（上游 -> 设备）",
+    "type": "channel_event",
+    "channel": "mattermost",
+    "event": "message_received",
+    "payload": {
+      "sender_id": "user_id_xxx",
+      "text": "Acceptance test message",
+      "channel_id": "channel_xxx",
+      "post_id": "post_xxx",
+      "ts": 1709900000
+    }
+  },
+  {
+    "description": "Nostr channel_event 下行注入样例（上游 -> 设备）",
+    "type": "channel_event",
+    "channel": "nostr",
+    "event": "message_received",
+    "payload": {
+      "sender_id": "npub1xxx",
+      "text": "Nostr acceptance test",
+      "event_id": "nevent1xxx",
+      "chat_id": "chat_xxx",
+      "relay": "wss://relay.damus.io",
+      "ts": 1709900000
+    }
+  }
+]

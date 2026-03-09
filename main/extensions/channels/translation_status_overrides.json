@@ -1,0 +1,22 @@
+{
+  "device-pair": {
+    "status": "implemented",
+    "notes": "已落地设备侧配对码生成、待审批缓存、审批回传上游链路。"
+  },
+  "thread-ownership": {
+    "status": "implemented",
+    "notes": "已落地 Slack 线程归属校验、@提及旁路、forwarder HTTP claim 与 NVS 配置持久化。"
+  },
+  "nostr": {
+    "status": "implemented",
+    "notes": "已落地 Nostr channel_event 缓存、allowlist 过滤、send_dm 上行桥接与 NVS 持久化。"
+  },
+  "mattermost": {
+    "status": "implemented",
+    "notes": "已落地 Mattermost channel_event 缓存、allowlist 过滤、send_message 上行桥接与 NVS 持久化。"
+  },
+  "feishu": {
+    "status": "implemented",
+    "notes": "已落地 Feishu channel_event 缓存、allowlist 过滤、send_message 上行桥接与 NVS 持久化。"
+  }
+}

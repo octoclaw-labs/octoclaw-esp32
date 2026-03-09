@@ -24,10 +24,12 @@ cJSON* BuildOpenClawExtensionCatalogJson() {
         cJSON_AddStringToObject(item, "id", catalog[i].id);
         cJSON_AddStringToObject(item, "adapterType", catalog[i].adapter_type);
         cJSON_AddStringToObject(item, "sourceDir", catalog[i].source_dir);
+        cJSON_AddStringToObject(item, "status", catalog[i].status);
         cJSON_AddBoolToObject(item, "hasChannels", catalog[i].has_channels);
         cJSON_AddBoolToObject(item, "hasProviders", catalog[i].has_providers);
         cJSON_AddBoolToObject(item, "hasSkills", catalog[i].has_skills);
         cJSON_AddBoolToObject(item, "hasConfigSchema", catalog[i].has_config_schema);
+        cJSON_AddBoolToObject(item, "websocketCapable", catalog[i].websocket_capable);
         cJSON_AddNumberToObject(item, "configKeyCount", catalog[i].config_key_count);
         cJSON_AddItemToArray(items, item);
     }

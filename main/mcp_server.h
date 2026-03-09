@@ -343,7 +343,9 @@ private:
     void FlushPendingReplies();
 
     void GetToolsList(int id, const std::string& cursor, bool list_user_only_tools);
-    void DoToolCall(int id, const std::string& tool_name, const cJSON* tool_arguments);
+    /** 执行单次 tools/call；client_request_id 为可选，来自 params.request_id/requestId，用于回执与批量关联 */
+    void DoToolCall(int id, const std::string& tool_name, const cJSON* tool_arguments,
+                    const std::string& client_request_id = "");
 
     std::vector<McpTool*> tools_;
 };

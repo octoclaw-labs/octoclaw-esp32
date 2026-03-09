@@ -10,6 +10,11 @@
 #include "mcp_server.h"
 #include "assets.h"
 #include "settings.h"
+#include "extensions/channels/device_pair_service.h"
+#include "extensions/channels/thread_ownership_service.h"
+#include "extensions/channels/nostr/nostr_channel_service.h"
+#include "extensions/channels/mattermost/mattermost_channel_service.h"
+#include "extensions/channels/feishu/feishu_channel_service.h"
 
 #include <cstring>
 #include <esp_log.h>
@@ -98,6 +103,18 @@ void Application::Initialize() {
     auto& mcp_server = McpServer::GetInstance();
     mcp_server.AddCommonTools();
     mcp_server.AddUserOnlyTools();
+
+    octo::channels::DevicePairService::GetInstance().Initialize(SystemInfo::GetMacAddress(), BOARD_NAME);
+    octo::channels::ThreadOwnershipService::GetInstance().Initialize(SystemInfo::GetMacAddress(), BOARD_NAME);
+#if CONFIG_OCTO_ENABLE_CHANNEL_NOSTR
+    octo::channels::NostrChannelService::GetInstance().Initialize(SystemInfo::GetMacAddress(), BOARD_NAME);
+#endif
+#if CONFIG_OCTO_ENABLE_CHANNEL_MATTERMOST
+    octo::channels::MattermostChannelService::GetInstance().Initialize(SystemInfo::GetMacAddress(), BOARD_NAME);
+#endif
+#if CONFIG_OCTO_ENABLE_CHANNEL_FEISHU
+    octo::channels::FeishuChannelService::GetInstance().Initialize(SystemInfo::GetMacAddress(), BOARD_NAME);
+#endif
 
     // Set network event callback for UI updates and network state handling
     board.SetNetworkEventCallback([this](NetworkEvent event, const std::string& data) {
@@ -570,6 +587,67 @@ void Application::InitializeProtocol() {
             auto payload = cJSON_GetObjectItem(root, "payload");
             if (cJSON_IsObject(payload)) {
                 McpServer::GetInstance().ParseMessage(payload);
+            }
+        } else if (strcmp(type->valuestring, "pairing_request") == 0 ||
+                   strcmp(type->valuestring, "pairing") == 0) {
+            bool is_request = strcmp(type->valuestring, "pairing_request") == 0;
+            if (!is_request) {
+                auto state = cJSON_GetObjectItem(root, "state");
+                is_request = cJSON_IsString(state) && strcmp(state->valuestring, "request") == 0;
+            }
+            if (is_request) {
+                std::string error_message;
+                if (!octo::channels::DevicePairService::GetInstance().AddPendingRequestFromJson(root, &error_message)) {
+                    ESP_LOGW(TAG, "Failed to cache pairing request: %s", error_message.c_str());
+                } else {
+                    ESP_LOGI(TAG, "Cached pairing request");
+                }
+            }
+        } else if (strcmp(type->valuestring, "channel_event") == 0) {
+#if CONFIG_OCTO_ENABLE_CHANNEL_NOSTR
+            bool nostr_cached = false;
+            std::string nostr_error_message;
+            bool nostr_consumed = octo::channels::NostrChannelService::GetInstance().ConsumeIncomingEvent(
+                root, &nostr_cached, &nostr_error_message);
+            if (!nostr_consumed && !nostr_error_message.empty()) {
+                ESP_LOGW(TAG, "Failed to consume channel_event for nostr: %s", nostr_error_message.c_str());
+            } else if (nostr_cached) {
+                ESP_LOGI(TAG, "Cached nostr inbound channel_event");
+            }
+#endif
+
+#if CONFIG_OCTO_ENABLE_CHANNEL_MATTERMOST
+            bool mattermost_cached = false;
+            std::string mattermost_error_message;
+            bool mattermost_consumed = octo::channels::MattermostChannelService::GetInstance().ConsumeIncomingEvent(
+                root, &mattermost_cached, &mattermost_error_message);
+            if (!mattermost_consumed && !mattermost_error_message.empty()) {
+                ESP_LOGW(TAG, "Failed to consume channel_event for mattermost: %s", mattermost_error_message.c_str());
+            } else if (mattermost_cached) {
+                ESP_LOGI(TAG, "Cached mattermost inbound channel_event");
+            }
+#endif
+
+#if CONFIG_OCTO_ENABLE_CHANNEL_FEISHU
+            bool feishu_cached = false;
+            std::string feishu_error_message;
+            bool feishu_consumed = octo::channels::FeishuChannelService::GetInstance().ConsumeIncomingEvent(
+                root, &feishu_cached, &feishu_error_message);
+            if (!feishu_consumed && !feishu_error_message.empty()) {
+                ESP_LOGW(TAG, "Failed to consume channel_event for feishu: %s", feishu_error_message.c_str());
+            } else if (feishu_cached) {
+                ESP_LOGI(TAG, "Cached feishu inbound channel_event");
+            }
+#endif
+
+            bool tracked = false;
+            std::string error_message;
+            bool consumed = octo::channels::ThreadOwnershipService::GetInstance().ConsumeIncomingEvent(
+                root, &tracked, &error_message);
+            if (!consumed && !error_message.empty()) {
+                ESP_LOGW(TAG, "Failed to consume channel_event for thread ownership: %s", error_message.c_str());
+            } else if (tracked) {
+                ESP_LOGI(TAG, "Tracked slack mention for thread ownership");
             }
         } else if (strcmp(type->valuestring, "system") == 0) {
             auto command = cJSON_GetObjectItem(root, "command");
@@ -1075,6 +1153,24 @@ void Application::SendMcpMessage(const std::string& payload) {
     Schedule([this, payload = std::move(payload)]() {
         if (protocol_) {
             protocol_->SendMcpMessage(payload);
+        }
+    });
+}
+
+void Application::SendPairingApprove(const std::string& request_id) {
+    Schedule([this, request_id]() {
+        if (protocol_ != nullptr && !request_id.empty()) {
+            protocol_->SendPairingApprove(request_id);
+        }
+    });
+}
+
+void Application::SendChannelCommand(const std::string& channel,
+                                     const std::string& command,
+                                     const std::string& payload) {
+    Schedule([this, channel, command, payload]() {
+        if (protocol_ != nullptr && !channel.empty() && !command.empty()) {
+            protocol_->SendChannelCommand(channel, command, payload);
         }
     });
 }

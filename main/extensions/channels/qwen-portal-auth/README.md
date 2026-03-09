@@ -1,4 +1,4 @@
-# qwen-portal-auth（ESP32 翻译骨架）
+# qwen-portal-auth（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/qwen-portal-auth`
 - 适配类型：`provider`

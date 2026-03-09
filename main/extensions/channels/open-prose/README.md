@@ -1,4 +1,4 @@
-# open-prose（ESP32 翻译骨架）
+# open-prose（ESP32 翻译状态）
 
 - 源扩展：`research/openclaw/extensions/open-prose`
 - 适配类型：`skill`

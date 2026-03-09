@@ -72,7 +72,11 @@ public:
     virtual void SendStartListening(ListeningMode mode);
     virtual void SendStopListening();
     virtual void SendAbortSpeaking(AbortReason reason);
+    virtual void SendPairingApprove(const std::string& request_id);
     virtual void SendMcpMessage(const std::string& message);
+    virtual void SendChannelCommand(const std::string& channel,
+                                    const std::string& command,
+                                    const std::string& payload);
 
 protected:
     std::function<void(const cJSON* root)> on_incoming_json_;
@@ -95,4 +99,3 @@ protected:
 };
 
 #endif // PROTOCOL_H
-
