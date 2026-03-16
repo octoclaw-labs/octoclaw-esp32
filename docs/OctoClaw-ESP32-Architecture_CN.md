@@ -823,6 +823,45 @@ ADR 应回答：某个 manifest、threshold、pairing、ota、telemetry、sessio
 一个 ADR 如果不能解释“设备本地实现了什么、哪些能力必须上移、如何保证安全边界和回执不漂移”，那它就还没有完成收口。
 
 
+## 52. 工程结构与扩展插件规范
+
+### 52.1 统一目录结构
+
+遵循 OctoClaw 全生态规范，OctoClaw-ESP32 采用 **ESP-IDF Component（Directory-based）** 结构，并在根目录下维护 `extensions/` 目录用于存放具体的业务插件组件。
+
+```text
+octoclaw-esp32/
+  CMakeLists.txt           # 项目构建配置
+  main/                    # 主程序
+  extensions/              # 扩展插件目录
+    douyin/                # 抖音插件组件
+      CMakeLists.txt
+      include/
+      douyin.c
+    meituan/               # 美团插件组件
+      CMakeLists.txt
+      include/
+      meituan.c
+```
+
+### 52.2 扩展插件命名规范
+
+所有扩展插件必须遵循以下命名规则：
+
+1.  **目录名**：即组件名，使用 snake_case，通常为 `{name}`。
+2.  **构建文件**：每个插件组件内必须包含 `CMakeLists.txt`，注册组件库。
+3.  **头文件**：公开头文件应位于 `include/` 目录下。
+
+### 52.3 核心扩展清单
+
+以下扩展插件将作为标准库的一部分进行维护（以 C 语言实现轻量级客户端或 MCP 代理）：
+
+- `douyin`
+- `meituan`
+- `rednode`
+- `kuaishou`
+- `amap`
+
 ---
 
 ---
