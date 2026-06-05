@@ -93,3 +93,4 @@ logs/
 ## harness db
 **/*.db
 
+/build-c3/
